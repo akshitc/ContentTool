@@ -1,0 +1,17 @@
+{
+	"auth": {
+		"contenttool01703afb": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": [],
+			"customAuth": false
+		}
+	},
+	"predictions": {
+		"analyseText": {
+			"providerPlugin": "awscloudformation",
+			"service": "Comprehend",
+			"interpretType": "interpretText"
+		}
+	}
+}

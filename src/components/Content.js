@@ -1,6 +1,13 @@
 import React from 'react';
 import makeRequest from '../services/makeRequest';
 import '../assets/styles/Content.css';
+import Amplify, { Storage, Predictions } from 'aws-amplify';
+import { AmazonAIPredictionsProvider } from '@aws-amplify/predictions';
+
+import awsconfig from '../aws-exports';
+
+Amplify.configure(awsconfig);
+Amplify.addPluggable(new AmazonAIPredictionsProvider());
 
 class Content extends React.Component {
     constructor(props) {
@@ -18,17 +25,29 @@ class Content extends React.Component {
 
     analyzeText() {
         this.setState({loading: true});
-        makeRequest({
-            url: 'http://www.mocky.io/v2/5e5aaed43000002b8a1f0bde',
-        }).then(result => {
-            if (result && result.data) {
-                this.setState({result: result.data});
+        // makeRequest({
+        //     url: 'http://www.mocky.io/v2/5e5aaed43000002b8a1f0bde',
+        // }).then(result => {
+        //     if (result && result.data) {
+        //         this.setState({result: result.data});
+        //     }
+        // }).catch(error => {
+        //     console.log('Error making request: ', error);
+        // }).finally(() => {
+        //     this.setState({loading: false});
+        // });
+        Predictions.interpret({
+            text: {
+              source: {
+                text: this.state.input,
+              },
+              type: "ALL"
             }
-        }).catch(error => {
-            console.log('Error making request: ', error);
-        }).finally(() => {
-            this.setState({loading: false});
-        });
+          }).then(result => this.setState({result: JSON.stringify(result, null, 2)}))
+            .catch(err => this.setState({loading: false}))
+            .finally(() => {
+                    this.setState({loading: false});
+                });
     }
 
     clearResult() {
