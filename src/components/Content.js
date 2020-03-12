@@ -3,6 +3,7 @@ import makeRequest from '../services/makeRequest';
 import '../assets/styles/Content.css';
 import Amplify, { Storage, Predictions } from 'aws-amplify';
 import { AmazonAIPredictionsProvider } from '@aws-amplify/predictions';
+import {Doughnut} from 'react-chartjs-2';
 
 import awsconfig from '../aws-exports';
 
@@ -16,6 +17,7 @@ class Content extends React.Component {
             input: '',
             result: '',
             loading: false,
+            chartData: null,
         };
     }
 
@@ -43,7 +45,15 @@ class Content extends React.Component {
               },
               type: "ALL"
             }
-          }).then(result => this.setState({result: JSON.stringify(result, null, 2)}))
+          }).then(result => this.setState({
+              result: JSON.stringify(result, null, 2),
+              chartData: [
+                  result.textInterpretation.sentiment.positive * 100,
+                  result.textInterpretation.sentiment.negative * 100,
+                  result.textInterpretation.sentiment.neutral * 100,
+                  result.textInterpretation.sentiment.mixed * 100,
+              ],
+            }))
             .catch(err => this.setState({loading: false}))
             .finally(() => {
                     this.setState({loading: false});
@@ -55,6 +65,28 @@ class Content extends React.Component {
     }
 
     render() {
+        const dough = {
+            labels: ['Positive', 'Negative', 'Neutral', 'Mixed'],
+            datasets: [
+              {
+                label: 'semantics',
+                backgroundColor: [
+                    '#2FDE00',
+                    '#B21F00',
+                    '#C9DE00',
+                    '#00A6B4',
+                ],
+                hoverBackgroundColor: [
+                    '#175000',
+                    '#501800',
+                    '#4B5000',
+                    '#003350',
+                ],
+                borderWidth: 0,
+                data: this.state.chartData,
+              }
+            ]
+          };
         return (
             <div className="content">
                 <div>
@@ -89,6 +121,34 @@ class Content extends React.Component {
                     </div>
     
                     <div className="col-5">
+                        {
+                            this.state.chartData ?
+                            <div className="sentiment-chart">
+                                <Doughnut
+                                    data={dough}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        title: {
+                                            display: true,
+                                            text: 'Semantic Analysis',
+                                            fontSize: 14,
+                                            position: 'left',
+                                        },
+                                        legend: {
+                                            display: true,
+                                            position: 'right',
+                                        },
+                                        cutoutPercentage: 75,
+                                        // circumference: Math.PI,
+                                        // rotation: Math.PI,
+                                    }}
+                                    width={150}
+                                    height={150}
+                                ></Doughnut>
+                            </div> : null
+                        }
+                        
                         <div className="input-box-container">
                             <textarea
                                 className="input-text"
