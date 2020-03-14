@@ -3,7 +3,7 @@ import makeRequest from '../services/makeRequest';
 import '../assets/styles/Content.css';
 import Amplify, { Storage, Predictions } from 'aws-amplify';
 import { AmazonAIPredictionsProvider } from '@aws-amplify/predictions';
-import {Doughnut} from 'react-chartjs-2';
+import {Doughnut, Line} from 'react-chartjs-2';
 
 import awsconfig from '../aws-exports';
 
@@ -17,7 +17,8 @@ class Content extends React.Component {
             input: '',
             result: '',
             loading: false,
-            chartData: null,
+            sentimentData: null,
+            trendsData: null,
         };
     }
 
@@ -45,15 +46,44 @@ class Content extends React.Component {
               },
               type: "ALL"
             }
-          }).then(result => this.setState({
-              result: JSON.stringify(result, null, 2),
-              chartData: [
-                  result.textInterpretation.sentiment.positive * 100,
-                  result.textInterpretation.sentiment.negative * 100,
-                  result.textInterpretation.sentiment.neutral * 100,
-                  result.textInterpretation.sentiment.mixed * 100,
-              ],
-            }))
+          }).then(result => {
+                this.setState({
+                    result: JSON.stringify(result, null, 2),
+                    sentimentData: [
+                        result.textInterpretation.sentiment.positive * 100,
+                        result.textInterpretation.sentiment.negative * 100,
+                        result.textInterpretation.sentiment.neutral * 100,
+                        result.textInterpretation.sentiment.mixed * 100,
+                    ],
+                });
+                return result.textInterpretation.keyPhrases.slice(0, 4).map(phrase => phrase.text);
+            })
+            .then((top4) => {
+                const trendsData = {
+                    top4,
+                    line1: [],
+                    line2: [],
+                    line3: [],
+                    line4: [],
+                    time: [],
+                };
+                makeRequest({
+                    url: `http://node-sample-env.eba-ff7ryya6.eu-central-1.elasticbeanstalk.com/trends?q=${top4.join(',')}`,
+                }).then(result => {
+                    if (result && result.data && result.data.default && result.data.default.timelineData) {
+                        result.data.default.timelineData.forEach((item) => {
+                            trendsData.time.push(item.formattedTime);
+                            trendsData.line1.push(item.value[0]);
+                            trendsData.line2.push(item.value[1]);
+                            trendsData.line3.push(item.value[2]);
+                            trendsData.line4.push(item.value[3]);
+                        });
+                        this.setState({trendsData});
+                    }
+                }).catch(error => {
+                    console.log('Error making request: ', error);
+                });
+            })
             .catch(err => this.setState({loading: false}))
             .finally(() => {
                     this.setState({loading: false});
@@ -68,25 +98,68 @@ class Content extends React.Component {
         const dough = {
             labels: ['Positive', 'Negative', 'Neutral', 'Mixed'],
             datasets: [
-              {
-                label: 'semantics',
-                backgroundColor: [
-                    '#2FDE00',
-                    '#B21F00',
-                    '#C9DE00',
-                    '#00A6B4',
-                ],
-                hoverBackgroundColor: [
-                    '#175000',
-                    '#501800',
-                    '#4B5000',
-                    '#003350',
-                ],
-                borderWidth: 0,
-                data: this.state.chartData,
-              }
+                {
+                    label: 'semantics',
+                    backgroundColor: [
+                        '#2FDE00',
+                        '#B21F00',
+                        '#C9DE00',
+                        '#00A6B4',
+                    ],
+                    hoverBackgroundColor: [
+                        '#175000',
+                        '#501800',
+                        '#4B5000',
+                        '#003350',
+                    ],
+                    borderWidth: 0,
+                    data: this.state.sentimentData,
+                }
             ]
-          };
+        };
+
+        const trends = {
+            labels: this.state.trendsData && this.state.trendsData.time,
+            datasets: [
+                {
+                    label: this.state.trendsData && this.state.trendsData.top4 && this.state.trendsData.top4[0],
+                    fill: false,
+                    lineTension: 0.5,
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 2,
+                    data: this.state.trendsData && this.state.trendsData.line1,
+                },
+                {
+                    label: this.state.trendsData && this.state.trendsData.top4 && this.state.trendsData.top4[1],
+                    fill: false,
+                    lineTension: 0.5,
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    borderColor: 'rgba(55, 0, 55, 1)',
+                    borderWidth: 1,
+                    data: this.state.trendsData && this.state.trendsData.line2,
+                },
+                {
+                    label: this.state.trendsData && this.state.trendsData.top4 && this.state.trendsData.top4[2],
+                    fill: false,
+                    lineTension: 0.5,
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    borderColor: 'rgba(125, 200, 0, 1)',
+                    borderWidth: 2,
+                    data: this.state.trendsData && this.state.trendsData.line3,
+                },
+                {
+                    label: this.state.trendsData && this.state.trendsData.top4 && this.state.trendsData.top4[3],
+                    fill: false,
+                    lineTension: 0.5,
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    borderColor: 'rgba(0, 243, 0, 1)',
+                    borderWidth: 1,
+                    data: this.state.trendsData && this.state.trendsData.line4,
+                }
+            ],
+        };
+
         return (
             <div className="content">
                 <div>
@@ -122,7 +195,7 @@ class Content extends React.Component {
     
                     <div className="col-5">
                         {
-                            this.state.chartData ?
+                            this.state.sentimentData ?
                             <div className="sentiment-chart">
                                 <Doughnut
                                     data={dough}
@@ -132,7 +205,7 @@ class Content extends React.Component {
                                         title: {
                                             display: true,
                                             text: 'Semantic Analysis',
-                                            fontSize: 14,
+                                            fontSize: 20,
                                             position: 'left',
                                         },
                                         legend: {
@@ -146,6 +219,27 @@ class Content extends React.Component {
                                     width={150}
                                     height={150}
                                 ></Doughnut>
+                            </div> : null
+                        }
+
+                        {
+                            this.state.trendsData ?
+                            <div className="trends-chart">
+                                <Line
+                                    data={trends}
+                                    options={{
+                                        title:{
+                                            display: true,
+                                            text: 'Google Trends',
+                                            fontSize: 20,
+                                            position: 'left',
+                                        },
+                                        legend:{
+                                            display: true,
+                                            position: 'bottom',
+                                        }
+                                    }}
+                                ></Line>
                             </div> : null
                         }
                         
