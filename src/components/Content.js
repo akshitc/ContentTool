@@ -68,7 +68,9 @@ class Content extends React.Component {
                     time: [],
                 };
                 makeRequest({
-                    url: `http://node-sample-env.eba-ff7ryya6.eu-central-1.elasticbeanstalk.com/trends?q=${top4.join(',')}`,
+                    method: 'POST',
+                    url: `http://node-sample-env.eba-ff7ryya6.eu-central-1.elasticbeanstalk.com/trends`,
+                    data: {text: this.state.input},
                 }).then(result => {
                     if (result && result.data && result.data.default && result.data.default.timelineData) {
                         result.data.default.timelineData.forEach((item) => {
