@@ -69,7 +69,7 @@ class Content extends React.Component {
                 };
                 makeRequest({
                     method: 'POST',
-                    url: `https://api.yeswrite.org/trends`,
+                    url: `https://yeswrite.herokuapp.com//trends`,
                     data: {text: this.state.input},
                 }).then(result => {
                     if (result && result.data && result.data.default && result.data.default.timelineData) {
