@@ -69,7 +69,7 @@ class Content extends React.Component {
                 };
                 makeRequest({
                     method: 'POST',
-                    url: `http://node-sample-env.eba-ff7ryya6.eu-central-1.elasticbeanstalk.com/trends`,
+                    url: `https://api.yeswrite.org/trends`,
                     data: {text: this.state.input},
                 }).then(result => {
                     if (result && result.data && result.data.default && result.data.default.timelineData) {
