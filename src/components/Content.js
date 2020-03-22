@@ -26,6 +26,10 @@ class Content extends React.Component {
         this.setState({input: event.target.value});
     }
 
+    clearInput() {
+        this.setState({input: ''})
+    }
+
     analyzeText() {
         this.setState({loading: true});
         Promise.allSettled([
@@ -189,6 +193,7 @@ class Content extends React.Component {
                     <div className="col-5">
                         <div className="input-box-container">
                             <textarea
+                                value={this.state.input}
                                 className="input-text"
                                 onChange={this.handleChange.bind(this)}
                                 placeholder="Please write the text and press analyze to get result."
@@ -204,6 +209,14 @@ class Content extends React.Component {
                                 onClick={this.analyzeText.bind(this)} 
                                 disabled={this.state.loading || !this.state.input.length}
                             />
+                            {
+                                this.state.input.length ? 
+                                <input	
+                                    type="submit"	
+                                    value="Clear Input"	
+                                    onClick={this.clearInput.bind(this)} 	
+                                /> : null
+                            }
                         </div>
                     </div>
 
