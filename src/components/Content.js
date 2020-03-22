@@ -1,7 +1,7 @@
 import React from 'react';
 import makeRequest from '../services/makeRequest';
 import '../assets/styles/Content.css';
-import Amplify, { Storage, Predictions } from 'aws-amplify';
+import Amplify, { Predictions } from 'aws-amplify';
 import { AmazonAIPredictionsProvider } from '@aws-amplify/predictions';
 import {Doughnut, Line} from 'react-chartjs-2';
 
@@ -15,10 +15,10 @@ class Content extends React.Component {
         super(props);
         this.state = {
             input: '',
-            result: '',
             loading: false,
             sentimentData: null,
             trendsData: null,
+            relatedArticles: null,
         };
     }
 
@@ -28,72 +28,81 @@ class Content extends React.Component {
 
     analyzeText() {
         this.setState({loading: true});
-        // makeRequest({
-        //     url: 'http://www.mocky.io/v2/5e5aaed43000002b8a1f0bde',
-        // }).then(result => {
-        //     if (result && result.data) {
-        //         this.setState({result: result.data});
-        //     }
-        // }).catch(error => {
-        //     console.log('Error making request: ', error);
-        // }).finally(() => {
-        //     this.setState({loading: false});
-        // });
-        Predictions.interpret({
-            text: {
-              source: {
-                text: this.state.input,
-              },
-              type: "ALL"
-            }
-          }).then(result => {
-                this.setState({
-                    result: JSON.stringify(result, null, 2),
-                    sentimentData: [
-                        result.textInterpretation.sentiment.positive * 100,
-                        result.textInterpretation.sentiment.negative * 100,
-                        result.textInterpretation.sentiment.neutral * 100,
-                        result.textInterpretation.sentiment.mixed * 100,
-                    ],
-                });
-                return result.textInterpretation.keyPhrases.slice(0, 4).map(phrase => phrase.text);
-            })
-            .then((top4) => {
-                const trendsData = {
-                    top4,
-                    line1: [],
-                    line2: [],
-                    line3: [],
-                    line4: [],
-                    time: [],
-                };
-                makeRequest({
-                    method: 'POST',
-                    url: `https://yeswrite.herokuapp.com/trends`,
-                    data: {text: this.state.input},
-                }).then(result => {
-                    if (result && result.data && result.data.default && result.data.default.timelineData) {
-                        result.data.default.timelineData.forEach((item) => {
+        Promise.allSettled([
+            Predictions.interpret({
+                text: {
+                  source: {
+                    text: this.state.input,
+                  },
+                  type: "ALL"
+                }
+              }),
+            makeRequest({
+                method: 'POST',
+                url: 'https://yeswrite.herokuapp.com/trends',
+                data: {text: this.state.input},
+            }),
+            makeRequest({
+                method: 'POST',
+                url: 'https://yeswrite.herokuapp.com/urls',
+                data: {text: this.state.input},
+            }),
+        ])
+            .then((responses) => {
+                if (responses[0].status === 'fulfilled') {
+                    const predictionsResult = responses[0].value;
+                    this.setState({
+                        sentimentData: [
+                            (predictionsResult.textInterpretation.sentiment.positive * 100).toFixed(2),
+                            (predictionsResult.textInterpretation.sentiment.negative * 100).toFixed(2),
+                            (predictionsResult.textInterpretation.sentiment.neutral * 100).toFixed(2),
+                            (predictionsResult.textInterpretation.sentiment.mixed * 100).toFixed(2),
+                        ],
+                    });
+                }
+
+                if (responses[1].status === 'fulfilled') {
+                    const trendsData = {
+                        top4: [],
+                        line1: [],
+                        line2: [],
+                        line3: [],
+                        line4: [],
+                        time: [],
+                    };
+                    const trendsResult = responses[1].value;
+                    if (trendsResult && trendsResult.data && trendsResult.data.default && trendsResult.data.default.timelineData) {
+                        trendsResult.data.default.timelineData.forEach((item) => {
                             trendsData.time.push(item.formattedTime);
                             trendsData.line1.push(item.value[0]);
                             trendsData.line2.push(item.value[1]);
                             trendsData.line3.push(item.value[2]);
                             trendsData.line4.push(item.value[3]);
                         });
+                        if (trendsResult.data && trendsResult.data.keywords) {
+                            trendsData.top4 = trendsResult.data.keywords;
+                        }
                         this.setState({trendsData});
                     }
-                }).catch(error => {
-                    console.log('Error making request: ', error);
-                });
-            })
-            .catch(err => this.setState({loading: false}))
-            .finally(() => {
-                    this.setState({loading: false});
-                });
-    }
+                }
 
-    clearResult() {
-        this.setState({result: ''});
+                if (responses[2].status === 'fulfilled') {
+                    const relatedArticles = responses[2].value.data;
+                    this.setState({relatedArticles});
+                }
+
+                if (responses[0].status === 'rejected') {
+                    console.log('Error: ', responses[0].value);
+                }
+                if (responses[1].status === 'rejected') {
+                    console.log('Error: ', responses[1].value);
+                }
+                if (responses[2].status === 'rejected') {
+                    console.log('Error: ', responses[2].value);
+                }
+
+                this.setState({loading: false});
+            });
     }
 
     render() {
@@ -162,6 +171,14 @@ class Content extends React.Component {
             ],
         };
 
+        const relatedList = this.state.relatedArticles && this.state.relatedArticles.map((article, index) => (
+            <a href={article.Urls} className="list-url" target="_blank">
+                <li key={index}>
+                    {article.Title}
+                </li>
+            </a>
+        ));
+
         return (
             <div className="content">
                 <div>
@@ -185,15 +202,14 @@ class Content extends React.Component {
                                 type="submit"
                                 value="Analyze"
                                 onClick={this.analyzeText.bind(this)} 
-                                disabled={this.state.loading}
-                            />
-                            <input
-                                type="submit"
-                                value="Clear Result"
-                                onClick={this.clearResult.bind(this)} 
+                                disabled={this.state.loading || !this.state.input.length}
                             />
                         </div>
                     </div>
+
+                    {
+                        this.state.loading ? <div id="cover-spin"></div> : null
+                    }
     
                     <div className="col-5">
                         {
@@ -245,14 +261,28 @@ class Content extends React.Component {
                             </div> : null
                         }
                         
-                        <div className="input-box-container">
-                            <textarea
-                                className="input-text"
-                                value={this.state.result}
-                                placeholder="Get your result here"
-                                readOnly
-                            />
-                        </div>
+                        {
+                            this.state.sentimentData || this.state.trendsData || this.state.relatedArticles ? null : 
+                            <div className="input-box-container">
+                                <textarea
+                                    className="input-text"
+                                    value={this.state.relatedArticles}
+                                    placeholder="Get your result here"
+                                    readOnly
+                                />
+                            </div>
+                        }
+
+                        {
+                            this.state.relatedArticles ?
+                            <div className="related-articles">
+                                <h2>See top 10 related articles: </h2>
+                                <ul className="related-list">
+                                    {relatedList}
+                                </ul>
+                            </div>
+                            : null
+                        }
                     </div>
                 </div>
             </div>
