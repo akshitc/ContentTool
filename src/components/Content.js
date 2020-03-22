@@ -211,7 +211,7 @@ class Content extends React.Component {
                         For demo enter your post/article in the box below and then press Analyse.
                     </p>
                 </div>
-                <div className="row">
+                <div className="row pad10">
                     <div className="col-5">
                         <div className="input-box-container">
                             <textarea

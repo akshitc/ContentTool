@@ -1,6 +1,6 @@
 .navbar {
     overflow: hidden;
-    background-color: #333;
+    background-color: #216319;
     position: fixed;
     top: 0;
     width: 100%;
@@ -17,6 +17,7 @@
   }
   
   .navbar a:hover {
-    background: #ddd;
+    background: #79a731;
     color: black;
+    transform: scale(1.2);
   }
