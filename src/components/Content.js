@@ -205,9 +205,11 @@ class Content extends React.Component {
 
         return (
             <div className="content">
-                <div>
-                    <h2>Heading</h2>
-                    <p>Some text description</p>
+                <div className="banner">
+                    <h2>Make Content Writing Great Again!!</h2>
+                    <p>We help you write better content by providing key insights on your written draft by comparing it with other similar viral articles on the same topic.
+                        For demo enter your post/article in the box below and then press Analyse.
+                    </p>
                 </div>
                 <div className="row">
                     <div className="col-5">

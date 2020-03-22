@@ -16,6 +16,11 @@
     text-align: center;
 }
 
+.banner {
+    background-image: url('../images/banner.jpg');
+    opacity: 0.5;
+}
+
 .analyze-button {
     padding: 10px;
 }
