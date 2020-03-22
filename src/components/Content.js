@@ -19,11 +19,17 @@ class Content extends React.Component {
             sentimentData: null,
             trendsData: null,
             relatedArticles: null,
+            viralTrendsLeft: null,
+            viralTrendsRight: null,
         };
     }
 
     handleChange(event) {
         this.setState({input: event.target.value});
+    }
+
+    clearInput() {
+        this.setState({input: ''})
     }
 
     analyzeText() {
@@ -90,6 +96,17 @@ class Content extends React.Component {
                     const relatedArticles = responses[2].value.data;
                     this.setState({relatedArticles});
                 }
+
+                const viralTrendsLeft = {
+                    'key1': 'value1',
+                    'key2': 'value2',
+                    'key3': 'value3',
+                };
+                const viralTrendsRight = {
+                    'key4': 'value4',
+                    'key5': 'value5',
+                };
+                this.setState({viralTrendsLeft, viralTrendsRight});
 
                 if (responses[0].status === 'rejected') {
                     console.log('Error: ', responses[0].value);
@@ -179,6 +196,14 @@ class Content extends React.Component {
             </a>
         ));
 
+        const vtl = this.state.viralTrendsLeft && Object.keys(this.state.viralTrendsLeft).map((key) => 
+            <p>{key}: {this.state.viralTrendsLeft[key]}</p>
+        );
+
+        const vtr = this.state.viralTrendsRight && Object.keys(this.state.viralTrendsRight).map((key) => 
+            <p>{key}: {this.state.viralTrendsRight[key]}</p>
+        );
+
         return (
             <div className="content">
                 <div>
@@ -189,6 +214,7 @@ class Content extends React.Component {
                     <div className="col-5">
                         <div className="input-box-container">
                             <textarea
+                                value={this.state.input}
                                 className="input-text"
                                 onChange={this.handleChange.bind(this)}
                                 placeholder="Please write the text and press analyze to get result."
@@ -204,6 +230,14 @@ class Content extends React.Component {
                                 onClick={this.analyzeText.bind(this)} 
                                 disabled={this.state.loading || !this.state.input.length}
                             />
+                            {
+                                this.state.input.length ? 
+                                <input	
+                                    type="submit"	
+                                    value="Clear Input"	
+                                    onClick={this.clearInput.bind(this)} 	
+                                /> : null
+                            }
                         </div>
                     </div>
 
@@ -274,9 +308,20 @@ class Content extends React.Component {
                         }
 
                         {
-                            this.state.relatedArticles ?
+                            vtl || vtr ? 
                             <div className="related-articles">
-                                <h2>See top 10 related articles: </h2>
+                                <h2>Viral Trends: </h2>
+                                <div className="row">
+                                    <div className="col-12">{vtl}</div>
+                                    <div className="col-12">{vtr}</div>
+                                </div>
+                            </div> : null
+                        }
+
+                        {
+                            this.state.relatedArticles && this.state.relatedArticles.length ?
+                            <div className="related-articles">
+                                <h2>See top related articles: </h2>
                                 <ul className="related-list">
                                     {relatedList}
                                 </ul>
