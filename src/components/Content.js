@@ -98,13 +98,12 @@ class Content extends React.Component {
                 }
 
                 const viralTrendsLeft = {
-                    'key1': 'value1',
-                    'key2': 'value2',
-                    'key3': 'value3',
+                    'Avg. number of characters in title': '8',
+                    'Avg. Image count': '4',
                 };
                 const viralTrendsRight = {
-                    'key4': 'value4',
-                    'key5': 'value5',
+                    'Avg. Read time': '6 min',
+                    'Avg. external links': '7',
                 };
                 this.setState({viralTrendsLeft, viralTrendsRight});
 
