@@ -185,12 +185,7 @@ class Content extends React.Component {
                                 type="submit"
                                 value="Analyze"
                                 onClick={this.analyzeText.bind(this)} 
-                                disabled={this.state.loading}
-                            />
-                            <input
-                                type="submit"
-                                value="Clear Result"
-                                onClick={this.clearResult.bind(this)} 
+                                disabled={this.state.loading || !this.state.input.length}
                             />
                         </div>
                     </div>
