@@ -289,7 +289,7 @@ class Content extends React.Component {
                         {
                             this.state.relatedArticles ?
                             <div className="related-articles">
-                                <h2>See top 10 related articles: </h2>
+                                <h2>See top related articles: </h2>
                                 <ul className="related-list">
                                     {relatedList}
                                 </ul>
