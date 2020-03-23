@@ -4,7 +4,7 @@ import '../assets/styles/Footer.css';
 function Footer() {
   return (
     <div className="footer">
-        <p>Footer</p>
+        <a href="mailto:helpyeswrite@gmail.com" target="_blank" rel="noopener noreferrer">helpyeswrite@gmail.com</a>
     </div>
   );
 }
