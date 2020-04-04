@@ -15,6 +15,7 @@ class Content extends React.Component {
         super(props);
         this.state = {
             input: '',
+            category: '',
             loading: false,
             sentimentData: null,
             trendsData: null,
@@ -26,6 +27,10 @@ class Content extends React.Component {
 
     handleChange(event) {
         this.setState({input: event.target.value});
+    }
+
+    handleCategory(event) {
+        this.setState({category: event.target.value});
     }
 
     clearInput() {
@@ -46,12 +51,12 @@ class Content extends React.Component {
             makeRequest({
                 method: 'POST',
                 url: 'https://yeswrite.herokuapp.com/trends',
-                data: {text: this.state.input},
+                data: {text: this.state.input, category: this.state.category},
             }),
             makeRequest({
                 method: 'POST',
                 url: 'https://yeswrite.herokuapp.com/urls',
-                data: {text: this.state.input},
+                data: {text: this.state.input, category: this.state.category},
             }),
         ])
             .then((responses) => {
@@ -211,6 +216,17 @@ class Content extends React.Component {
                         For demo enter your post/article in the box below and then press Analyse.
                     </p>
                 </div>
+
+                <div className="row pad10">
+                    <select id="category" className="category" value={this.state.category} onChange={this.handleCategory.bind(this)}>
+                        <option value=''>Select Category</option>
+                        <option value="politics">Politics</option>
+                        <option value="technology">Techonology</option>
+                        <option value="economics">Economics</option>
+                        <option value="health">Health</option>
+                    </select>
+                </div>
+
                 <div className="row pad10">
                     <div className="col-5">
                         <div className="input-box-container">
@@ -224,16 +240,20 @@ class Content extends React.Component {
                     </div>
     
                     <div className="col-2 center-align">
-                        <div className="analyze-button">
+                        <div>
                             <input
+                                className={
+                                    (!this.state.input.length || !this.state.category) ? 'primary-button disabled' : 'primary-button'
+                                }
                                 type="submit"
                                 value="Analyze"
                                 onClick={this.analyzeText.bind(this)} 
-                                disabled={this.state.loading || !this.state.input.length}
+                                disabled={this.state.loading || !this.state.input.length || !this.state.category}
                             />
                             {
                                 this.state.input.length ? 
-                                <input	
+                                <input
+                                    className="primary-button"
                                     type="submit"	
                                     value="Clear Input"	
                                     onClick={this.clearInput.bind(this)} 	
