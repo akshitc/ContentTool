@@ -220,10 +220,11 @@ class Content extends React.Component {
                 <div className="row pad10">
                     <select id="category" className="category" value={this.state.category} onChange={this.handleCategory.bind(this)}>
                         <option value=''>Select Category</option>
-                        <option value="politics">Politics</option>
                         <option value="technology">Techonology</option>
-                        <option value="economics">Economics</option>
-                        <option value="health">Health</option>
+                        <option value="politics">Politics</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="economy">Economy</option>
+                        <option value="philosophy">Philosophy</option>
                     </select>
                 </div>
 
