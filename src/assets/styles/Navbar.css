@@ -1,9 +1,11 @@
 .navbar {
     overflow: hidden;
-    background-image: linear-gradient(to right, red , yellow);
+    background-color: white;
+    background-image: linear-gradient(to right, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 1));
     position: fixed;
     top: 0;
     width: 100%;
+    z-index: 1;
   }
   
   .navbar a {
