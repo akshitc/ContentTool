@@ -16,9 +16,11 @@ class Content extends React.Component {
         this.state = {
             input: '',
             category: '',
+            heading: '',
             loading: false,
             sentimentData: null,
             trendsData: null,
+            headlineData: null,
             relatedArticles: null,
             viralTrendsLeft: null,
             viralTrendsRight: null,
@@ -27,6 +29,10 @@ class Content extends React.Component {
 
     handleChange(event) {
         this.setState({input: event.target.value});
+    }
+
+    handleHeading(event) {
+        this.setState({heading: event.target.value})
     }
 
     handleCategory(event) {
@@ -59,6 +65,11 @@ class Content extends React.Component {
                 method: 'POST',
                 url: 'https://yeswrite.herokuapp.com/trends',
                 data: {text: this.state.input, category: this.state.category},
+            }),
+            makeRequest({
+                method: 'POST',
+                url: 'https://yeswrite.herokuapp.com/headline',
+                data: {headline: this.state.heading},
             }),
             makeRequest({
                 method: 'POST',
@@ -105,7 +116,12 @@ class Content extends React.Component {
                 }
 
                 if (responses[2].status === 'fulfilled') {
-                    const relatedArticles = responses[2].value.data;
+                    const headlineData = responses[2].value.data;
+                    this.setState({headlineData});
+                }
+
+                if (responses[3].status === 'fulfilled') {
+                    const relatedArticles = responses[3].value.data;
                     this.setState({relatedArticles});
                 }
 
@@ -127,6 +143,9 @@ class Content extends React.Component {
                 }
                 if (responses[2].status === 'rejected') {
                     console.log('Error: ', responses[2].value);
+                }
+                if (responses[3].status === 'rejected') {
+                    console.log('Error: ', responses[3].value);
                 }
 
                 this.setState({loading: false});
@@ -153,6 +172,34 @@ class Content extends React.Component {
                     ],
                     borderWidth: 0,
                     data: this.state.sentimentData,
+                }
+            ]
+        };
+
+        const headlineChart = this.state.headlineData && {
+            labels: ['Power', 'Emotional', 'Common', 'Uncommon'],
+            datasets: [
+                {
+                    label: 'Headline Analysis',
+                    backgroundColor: [
+                        '#f74d4d',
+                        '#fffc33',
+                        '#33e4ff',
+                        '#d633ff',
+                    ],
+                    hoverBackgroundColor: [
+                        '#9c341a',
+                        '#919c1a',
+                        '#187887',
+                        '#711887',
+                    ],
+                    borderWidth: 0,
+                    data: [
+                        this.state.headlineData.power.percentage,
+                        this.state.headlineData.emotional.percentage,
+                        this.state.headlineData.common.percentage,
+                        this.state.headlineData.uncommon.percentage,
+                    ],
                 }
             ]
         };
@@ -209,11 +256,11 @@ class Content extends React.Component {
         ));
 
         const vtl = this.state.viralTrendsLeft && Object.keys(this.state.viralTrendsLeft).map((key) => 
-            <p>{key}: {this.state.viralTrendsLeft[key]}</p>
+            <p><b>{key}</b>: {this.state.viralTrendsLeft[key]}</p>
         );
 
         const vtr = this.state.viralTrendsRight && Object.keys(this.state.viralTrendsRight).map((key) => 
-            <p>{key}: {this.state.viralTrendsRight[key]}</p>
+            <p><b>{key}</b>: {this.state.viralTrendsRight[key]}</p>
         );
 
         return (
@@ -238,12 +285,20 @@ class Content extends React.Component {
 
                 <div className="row pad10">
                     <div className="col-5">
-                        <div className="input-box-container">
+                        <div className="row">
+                            <textarea
+                                value={this.state.heading}
+                                className="heading-text"
+                                onChange={this.handleHeading.bind(this)}
+                                placeholder="Enter Heading"
+                            />
+                        </div>
+                        <div className="row">
                             <textarea
                                 value={this.state.input}
                                 className="input-text"
                                 onChange={this.handleChange.bind(this)}
-                                placeholder="Please write the text and press analyze to get result."
+                                placeholder="Enter you blog text and press analyze to get result."
                             />
                         </div>
                     </div>
@@ -252,12 +307,12 @@ class Content extends React.Component {
                         <div>
                             <input
                                 className={
-                                    (!this.state.input.length || !this.state.category) ? 'primary-button disabled' : 'primary-button'
+                                    (!this.state.input.length || !this.state.heading.length || !this.state.category) ? 'primary-button disabled' : 'primary-button'
                                 }
                                 type="submit"
                                 value="Analyze"
                                 onClick={this.analyzeText.bind(this)} 
-                                disabled={this.state.loading || !this.state.input.length || !this.state.category}
+                                disabled={this.state.loading || !this.state.input.length || !this.state.category|| !this.state.heading.length }
                             />
                             {
                                 this.state.input.length ? 
@@ -276,9 +331,59 @@ class Content extends React.Component {
                     }
     
                     <div className="col-5">
+                    {
+                            this.state.headlineData ?
+                            <div className="white-back-div">
+                                <Doughnut
+                                    data={headlineChart}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        title: {
+                                            display: true,
+                                            text: 'Headline Analysis',
+                                            fontSize: 20,
+                                            position: 'left',
+                                        },
+                                        legend: {
+                                            display: true,
+                                            position: 'right',
+                                        },
+                                        cutoutPercentage: 0,
+                                        tooltips: {
+                                            backgroundColor: '#f5f5f5',
+                                            bodyFontColor: '#000000',
+                                            titleFontColor: '#000000',
+                                            footerFontColor: '#000000',
+                                            titleFontSize: 16,
+                                            bodyFontSize: 14,
+                                            footerFontSize: 12,
+                                            enabled: true,
+                                            callbacks: {
+                                                title: (item, data) => {
+                                                    return data.labels[item[0].index];
+                                                },
+                                                label: (item, data) => {
+                                                    const key = data.labels[item.index].toLowerCase();
+                                                    return this.state.headlineData[key].words.join(', ');
+                                                },
+                                                footer: (item, data) => {
+                                                    const key = data.labels[item[0].index].toLowerCase();
+                                                    const lenghtOfWords = this.state.headlineData[key].count;
+                                                    return `Number of words: ${lenghtOfWords}`;
+                                                },
+                                            }
+                                        }
+                                    }}
+                                    width={120}
+                                    height={120}
+                                ></Doughnut>
+                            </div> : null
+                        }
+
                         {
                             this.state.sentimentData ?
-                            <div className="sentiment-chart">
+                            <div className="white-back-div">
                                 <Doughnut
                                     data={dough}
                                     options={{
@@ -295,18 +400,18 @@ class Content extends React.Component {
                                             position: 'right',
                                         },
                                         cutoutPercentage: 75,
-                                        // circumference: Math.PI,
-                                        // rotation: Math.PI,
+                                        circumference: Math.PI,
+                                        rotation: Math.PI,
                                     }}
-                                    width={150}
-                                    height={150}
+                                    width={120}
+                                    height={120}
                                 ></Doughnut>
                             </div> : null
                         }
 
                         {
                             this.state.trendsData ?
-                            <div className="trends-chart">
+                            <div className="white-back-div">
                                 <Line
                                     data={trends}
                                     options={{
@@ -330,7 +435,7 @@ class Content extends React.Component {
                             <div className="input-box-container">
                                 <textarea
                                     className="input-text"
-                                    value={this.state.relatedArticles}
+                                    value=''
                                     placeholder="Get your result here"
                                     readOnly
                                 />
@@ -339,7 +444,7 @@ class Content extends React.Component {
 
                         {
                             vtl || vtr ? 
-                            <div className="related-articles">
+                            <div className="white-back-div">
                                 <h2>Viral Trends: </h2>
                                 <div className="row">
                                     <div className="col-12">{vtl}</div>
@@ -350,7 +455,7 @@ class Content extends React.Component {
 
                         {
                             this.state.relatedArticles && this.state.relatedArticles.length ?
-                            <div className="related-articles">
+                            <div className="white-back-div">
                                 <h2>See top related articles: </h2>
                                 <ul className="related-list">
                                     {relatedList}
