@@ -4,11 +4,38 @@
 }
 
 .input-text {
-    width: 100%;
+    width: 97%;
     max-width: 100%;
     height: 900px;
     font-size: 16px;
     padding: 8px;
+}
+
+.input-text::placeholder {
+    opacity: 0.6;
+    font-size: 28px;
+}
+
+.input-text:focus::placeholder {
+    font-size: 16px;
+}
+
+.heading-text {
+    width: 97%;
+    max-width: 100%;
+    height: 35px;
+    font-size: 16px;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.heading-text::placeholder {
+    opacity: 0.6;
+    font-size: 28px;
+}
+
+.heading-text:focus::placeholder {
+    font-size: 16px;
 }
 
 .center-align {
@@ -43,23 +70,14 @@
     background-color: green;
     color: white;
     font-size: 16px;
+    border-radius: 10px;
 }
 
 .disabled {
     background-color: grey;
 }
 
-.sentiment-chart {
-    background-color: white;
-    padding: 10px;
-}
-
-.trends-chart {
-    background-color: white;
-    padding: 10px;
-}
-
-.related-articles {
+.white-back-div {
     background-color: white;
     padding: 10px;
 }
