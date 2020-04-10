@@ -38,7 +38,14 @@ class Content extends React.Component {
     }
 
     analyzeText() {
-        this.setState({loading: true});
+        this.setState({
+            loading: true,
+            sentimentData: null,
+            trendsData: null,
+            relatedArticles: null,
+            viralTrendsLeft: null,
+            viralTrendsRight: null,
+        });
         Promise.allSettled([
             Predictions.interpret({
                 text: {
@@ -193,6 +200,7 @@ class Content extends React.Component {
         };
 
         const relatedList = this.state.relatedArticles && this.state.relatedArticles.map((article, index) => (
+            // eslint-disable-next-line react/jsx-no-target-blank
             <a href={article.Urls} className="list-url" target="_blank">
                 <li key={index}>
                     {article.Title}
